@@ -97,14 +97,25 @@ fn get_sizes_of_objects(ids: Vec<&String>) -> HashMap<String, u64> {
 fn main() {
     let opt = Opt::from_args();
 
-    let revs = get_revs_for_paths(opt.paths);
-    let sizes = get_sizes_of_objects(revs.keys().collect());
+    let revs_to_paths = get_revs_for_paths(opt.paths);
+    // println!("{:?}", revs);
+    let mut paths_to_count: HashMap<PathBuf, u32> = HashMap::new();
+    revs_to_paths.iter().for_each(|(_rev, path)| {
+        let previous = paths_to_count.insert(path.clone(), 1);
+        if let Some(count) = previous {
+            paths_to_count.insert(path.clone(), count + 1);
+        }
+    });
+    println!("{:#?}", paths_to_count);
+
+
+    let sizes = get_sizes_of_objects(revs_to_paths.keys().collect());
 
     // This skips directories (they have no size mapping).
     // Filename -> size mapping tuples. Files are present in the list more than once.
     let file_sizes: Vec<(&Path, u64)> = sizes
         .iter()
-        .map(|(id, size)| (revs[id].as_path(), *size))
+        .map(|(id, size)| (revs_to_paths[id].as_path(), *size))
         .collect();
 
     // (Filename, size) tuples.
