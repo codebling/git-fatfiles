@@ -106,7 +106,7 @@ fn main() {
             paths_to_count.insert(path.clone(), count + 1);
         }
     });
-    println!("{:#?}", paths_to_count);
+    // println!("{:#?}", paths_to_count);
 
 
     let sizes = get_sizes_of_objects(revs_to_paths.keys().collect());
@@ -137,13 +137,16 @@ fn main() {
     }
     let sizes: Vec<(&Path, u64)> = file_size_sums.into_iter().collect();
 
-    print_sizes(sizes);
+    print_sizes(sizes, paths_to_count);
 }
 
-fn print_sizes(mut sizes: Vec<(&Path, u64)>) {
+fn print_sizes(mut sizes: Vec<(&Path, u64)>, paths_to_count: HashMap<PathBuf, u32>) {
     sizes.sort_by_key(|(_path, size)| *size);
     for file_size in sizes.iter() {
+        let path = file_size.0;
+        let count = paths_to_count.get(&PathBuf::from(path)).unwrap();
+
         // The size needs some padding--a long size is as long as a tabstop
-        println!("{:10}{}", ByteSize(file_size.1), file_size.0.display())
+        println!("{:10} {:4} commit{} {}", ByteSize(file_size.1), count, if count > &1 {"s"} else {" "}, file_size.0.display())
     }
 }
